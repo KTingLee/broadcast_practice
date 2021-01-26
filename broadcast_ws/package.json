@@ -1,0 +1,27 @@
+{
+  "name": "audio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon ./backend/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://laby@bitbucket.org/bxbtw/node-audio.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/bxbtw/node-audio#readme",
+  "dependencies": {
+    "audify": "^1.5.2",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "http-status": "^1.5.0",
+    "socket.io": "^3.1.0",
+    "ws": "^7.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
