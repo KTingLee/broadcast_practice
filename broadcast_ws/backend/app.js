@@ -39,6 +39,7 @@ function initWS(ws) {
   ws.on('connection', socket => {
     console.log(`有用戶連線了！`)
     console.log(Object.keys(socket));
+    console.log(socket.handshake.address);  // 獲得該使用者的 address
     socket.on('message', data => {
       console.log(data);
     })
