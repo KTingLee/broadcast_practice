@@ -30,7 +30,12 @@ server.listen(3000, () => {
 })
 
 function initWS(ws) {
-  console.log('init ws');
+  console.log('初始化ws，等待用戶連線...');
+  
+  setInterval(() => {
+    ws.emit('second', { 'second': new Date().getSeconds()})
+  }, 1000)
+
   ws.on('connection', socket => {
     console.log(`有用戶連線了！`)
     console.log(Object.keys(socket));
