@@ -18,7 +18,9 @@
   <p>Make sure you are using a recent version of Google Chrome, at the moment this only works with Google Chrome Canary.</p>
   <p>Also before you enable microphone input either plug in headphones or turn the volume down if you want to avoid ear splitting feedback!</p>
 
-  <button id="btn1">開始廣播</button>
+  <button id="broadcastInfo">廣播狀態</button>
+  <button id="broadcastStart">開始廣播</button>
+  <button id="broadcastStop">停止廣播</button>
 
   <h2>Recordings</h2>
   <ul id="recordingslist"></ul>
@@ -27,7 +29,13 @@
   <pre id="log"></pre>
 
   <script>
-    $("#btn1").click(function(){
+    $('#broadcastInfo').click(() => {
+      $.get('http://127.0.0.1:3000/api/broadcast/info', res => {
+        log.innerHTML += "\n" + `Status: ${res.status},    Area: ${JSON.stringify(res.area)}`;
+      })
+    })
+
+    $("#broadcastStart").click(function(){
       $.post('/api/broadcast/start', {
         type: 'ws',
         area: [],
