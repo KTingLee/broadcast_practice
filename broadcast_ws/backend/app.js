@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const bodyParser = require('body-parser')
 const server = require('http').createServer(app)
 
 const ctrl = require('./broadcast.controller')
@@ -14,6 +15,8 @@ const ws = require('socket.io')(server, {
 
 app.use(cors())
 app.use(express.static(`${__dirname}/../public`))
+app.use(bodyParser.json({limit: 1024 * 1024 * 1024})) // 1G
+app.use(bodyParser.urlencoded({ extended: true }))
 
 app.use((req, res, next) => {
   req.ws = ws
@@ -21,7 +24,7 @@ app.use((req, res, next) => {
 })
 
 app.get(`/api/broadcast/info`, ctrl.info)
-app.get(`/api/broadcast/start`, ctrl.start)
+app.post(`/api/broadcast/start`, ctrl.start)
 app.get(`/api/broadcast/stop`, ctrl.stop)
 
 server.listen(3000, () => {
@@ -32,9 +35,9 @@ server.listen(3000, () => {
 function initWS(ws) {
   console.log('初始化ws，等待用戶連線...');
   
-  setInterval(() => {
-    ws.emit('second', { 'second': new Date().getSeconds()})
-  }, 1000)
+  // setInterval(() => {
+  //   ws.emit('second', { 'second': new Date().getSeconds()})
+  // }, 1000)
 
   ws.on('connection', socket => {
     console.log(`有用戶連線了！`)

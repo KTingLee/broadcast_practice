@@ -1,4 +1,4 @@
-var socket = io.connect();
-socket.on('second', function (second) {
+var server_socket = io.connect();
+server_socket.on('second', function (second) {
     console.log(second);
 });
