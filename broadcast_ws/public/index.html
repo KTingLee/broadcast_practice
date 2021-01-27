@@ -22,6 +22,8 @@
   <button id="broadcastStart">開始廣播</button>
   <button id="broadcastStop">停止廣播</button>
 
+  <button onclick="stopRecording(this);">stop</button>
+
   <h2>Recordings</h2>
   <ul id="recordingslist"></ul>
 
@@ -29,6 +31,8 @@
   <pre id="log"></pre>
 
   <script>
+    var broadcast_socket
+
     $('#broadcastInfo').click(() => {
       $.get('http://127.0.0.1:3000/api/broadcast/info', res => {
         log.innerHTML += "\n" + `Status: ${res.status},    Area: ${JSON.stringify(res.area)}`;
@@ -36,26 +40,130 @@
     })
 
     $("#broadcastStart").click(function(){
-      $.post('/api/broadcast/start', {
+      $.post('http://127.0.0.1:3000/api/broadcast/start', {
         type: 'ws',
         area: [],
         address: '192.168.0.1'
       }, function(data){
         if (data.message === 'OK') {
-          const broadcast_socket = new WebSocket('ws://localhost:8000');
+          // 後端通知成功後，連上後端廣播用的 ws
+          broadcast_socket = new WebSocket('ws://localhost:8000');
           broadcast_socket.binaryType = 'arraybuffer'
+
+          // 連上後端廣播用的 ws 後，開始錄音，並送資料
           broadcast_socket.onopen = function () {
-          console.log(broadcast_socket);
-          console.log('connect');
-          setInterval(() => {
-            broadcast_socket.send('打招呼')  // broadcast 使用者送資料
-          }, 1000)
-          };
+            console.log(broadcast_socket);
+            console.log('connect');
+            startRecording()
+            // setInterval(() => {
+            //   broadcast_socket.send('打招呼')  // broadcast 使用者送資料
+            // }, 1000)
+          }
+        } else {
+          alert(data.message)
         }
       });
     });
 
   </script>
+
+<script>
+  function __log(e, data) {
+    log.innerHTML += "\n" + e + " " + (data || '');
+  }
+
+  var audio_context;
+  var recorder;
+  let mediaRecorder
+  let chunks = []
+
+  function startUserMedia(stream) {
+    var input = audio_context.createMediaStreamSource(stream);
+    __log('Media stream created.');
+
+    // 我要在這邊把聲音的buffer收集起來
+    mediaRecorder = new MediaRecorder(stream)
+
+    // input.connect(audio_context.destination);  // 將 input 傳送到指定位置
+    __log('Input connected to audio context destination.');
+
+    recorder = new Recorder(input);
+    __log('Recorder initialised.');
+
+  }
+
+  function startRecording() {
+    recorder && recorder.record();
+    __log('Recording...');
+
+    // 開始收聲音串流了～～
+    // mediaRecorder.start()
+  }
+
+  function stopRecording(button) {
+    recorder && recorder.stop();
+    button.disabled = true;
+    button.previousElementSibling.disabled = false;
+    __log('Stopped recording.');
+    socket.send('打招呼')
+
+
+    // 停止收聲音串流了～～
+    mediaRecorder.stop();
+
+    // create WAV download link using audio data blob
+    createDownloadLink();
+    
+    recorder.clear();
+  }
+
+  function createDownloadLink() {
+    recorder && recorder.exportWAV(function(blob) {
+      var url = URL.createObjectURL(blob);
+      var li = document.createElement('li');
+      var au = document.createElement('audio');
+      var hf = document.createElement('a');
+      au.controls = true;
+      au.src = url;
+      hf.href = url;
+      hf.download = new Date().toISOString() + '.wav';
+      hf.innerHTML = hf.download;
+      li.appendChild(au);
+      li.appendChild(hf);
+      recordingslist.appendChild(li);
+    });
+  }
+
+  window.onload = function init() {
+    try {
+      // webkit shim
+      window.AudioContext = window.AudioContext || window.webkitAudioContext;
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+      window.URL = window.URL || window.webkitURL;
+
+      audio_context = new AudioContext;
+      __log('Audio context set up.');
+      __log('navigator.getUserMedia ' + (navigator.getUserMedia ? 'available.' : 'not present!'));
+   
+    } catch (e) {
+      alert('No web audio support in this browser!');
+    }
+
+    // navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
+    //   __log('No live audio input: ' + e);
+    // });
+  let onError = function(err) {
+      __log('No live audio input: ' + err);
+
+    console.log('The following error occured: ' + err);
+  }
+
+  navigator.mediaDevices.getUserMedia({audio: true})
+    .then(startUserMedia, onError);
+  };
+  </script>
+  <script src="recorder.js"></script>
+
   <script src="socket_io.js"></script>
 </body>
 </html>
