@@ -6,11 +6,18 @@ const server = require('http').createServer(app)
 
 const ctrl = require('./broadcast.controller')
 
+const corsOption = {
+  origin: ['http://127.0.0.1:3000', 'http://127.0.0.1:5000', 'http://127.0.0.1:8887'],
+  methods: ['GET', 'POST'],
+  credentials: true
+}
+
 // ws 跟 server 聽同一個 port
 const ws = require('socket.io')(server, {
   transports: ['websocket', 'polling'],
   pingInterval: 40000,
-  pingTimeout: 25000
+  pingTimeout: 25000,
+  cors: corsOption
 })
 
 app.use(cors())
