@@ -94,6 +94,7 @@ Broadcast.prototype.start = function (obj) {
 }
 
 Broadcast.prototype.stop = function () {
+  rtAudio.stop()
   this.status = 'idle'
   this.clientIp = ''  // 正在廣播的address
   this.area = []  // 廣播的分區編號
