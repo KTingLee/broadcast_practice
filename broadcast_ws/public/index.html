@@ -22,8 +22,6 @@
   <button id="broadcastStart">開始廣播</button>
   <button id="broadcastStop">停止廣播</button>
 
-  <button onclick="stopRecording(this);">stop</button>
-
   <h2>Recordings</h2>
   <ul id="recordingslist"></ul>
 
@@ -65,6 +63,14 @@
       });
     });
 
+    $("#broadcastStop").click(function(){
+      stopRecording()
+      $.get(`http://127.0.0.1:3000/api/broadcast/stop`, () => {
+        if (broadcast_socket) broadcast_socket.close()
+        broadcast_socket = null
+      })
+    })
+
   </script>
 
 <script>
@@ -82,7 +88,7 @@
     __log('Media stream created.');
 
     // 我要在這邊把聲音的buffer收集起來
-    mediaRecorder = new MediaRecorder(stream)
+    // mediaRecorder = new MediaRecorder(stream)
 
     // input.connect(audio_context.destination);  // 將 input 傳送到指定位置
     __log('Input connected to audio context destination.');
@@ -100,19 +106,15 @@
     // mediaRecorder.start()
   }
 
-  function stopRecording(button) {
+  function stopRecording() {
     recorder && recorder.stop();
-    button.disabled = true;
-    button.previousElementSibling.disabled = false;
     __log('Stopped recording.');
-    socket.send('打招呼')
-
 
     // 停止收聲音串流了～～
-    mediaRecorder.stop();
+    // mediaRecorder.stop();
 
     // create WAV download link using audio data blob
-    createDownloadLink();
+    // createDownloadLink();
     
     recorder.clear();
   }

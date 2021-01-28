@@ -24,7 +24,10 @@ function start (req, res, next) {
 }
 
 function stop (req, res, next) {
-
+  if (BroadcastService.status === 'busy') {
+    BroadcastService.stop()
+  }
+  return res.status(httpStatus.OK).json({message: 'OK'})
 }
 
 module.exports = { info, start, stop}
