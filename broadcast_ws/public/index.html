@@ -75,48 +75,31 @@
 
 <script>
   function __log(e, data) {
-    log.innerHTML += "\n" + e + " " + (data || '');
+    log.innerHTML += "\n" + e + " " + (data || '')
   }
 
-  var audio_context;
-  var recorder;
+  var audio_context
+  var recorder
   let mediaRecorder
   let chunks = []
 
-  function startUserMedia(stream) {
-    var input = audio_context.createMediaStreamSource(stream);
-    __log('Media stream created.');
-
-    // 我要在這邊把聲音的buffer收集起來
-    // mediaRecorder = new MediaRecorder(stream)
-
-    // input.connect(audio_context.destination);  // 將 input 傳送到指定位置
-    __log('Input connected to audio context destination.');
-
-    recorder = new Recorder(input);
-    __log('Recorder initialised.');
-
-  }
-
   function startRecording() {
-    recorder && recorder.record();
-    __log('Recording...');
+    recorder && recorder.record()  // recorder 收聲音串流
+    __log('Recording...')
 
-    // 開始收聲音串流了～～
     // mediaRecorder.start()
   }
 
   function stopRecording() {
-    recorder && recorder.stop();
-    __log('Stopped recording.');
+    recorder && recorder.stop()
+    __log('Stopped recording.')
 
-    // 停止收聲音串流了～～
     // mediaRecorder.stop();
 
     // create WAV download link using audio data blob
     // createDownloadLink();
     
-    recorder.clear();
+    recorder.clear()
   }
 
   function createDownloadLink() {
@@ -137,25 +120,40 @@
   }
 
   window.onload = function init() {
-    // 詢問使用者是否可使用其媒體設備
-    navigator.mediaDevices.getUserMedia({audio: true})
-      .then(startUserMedia)
-      .catch(err => __log(err))
-
     try {
       // webkit shim
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
-      window.URL = window.URL || window.webkitURL;
+      window.AudioContext = window.AudioContext || window.webkitAudioContext
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia
+      window.URL = window.URL || window.webkitURL
 
       audio_context = new AudioContext;
-      __log('Audio context set up.');
-      __log('navigator.getUserMedia ' + (navigator.getUserMedia ? 'available.' : 'not present!'));
+      __log('Audio context set up.')
+      __log('navigator.getUserMedia ' + (navigator.getUserMedia ? 'available.' : 'not present!'))
     } catch (e) {
-      alert('No web audio support in this browser!');
+      alert('No web audio support in this browser!')
     }
-  };
-  
+
+    // 詢問使用者是否可使用其媒體設備
+    navigator.mediaDevices.getUserMedia({audio: true})
+      .then(stream => _startUserMedia(stream))
+      .catch(err => __log(err))
+
+    function _startUserMedia(stream) {
+      var input = audio_context.createMediaStreamSource(stream)  // 利用 createMediaStreamSource 將麥克風音訊轉成音源節點
+      __log('Media stream created.')
+
+      // 初始化 MediaRecorder 物件：用來分析聲音節點。初始化時可以提供初始化參數，例如 mimeType, sampleRate
+      // mediaRecorder = new MediaRecorder(stream)
+
+      // input.connect(audio_context.destination);  // 將 input 傳送到指定位置
+      // __log('Input connected to audio context destination.')
+
+      // 初始化 recorder.js 物件，並將音源節點傳入
+      recorder = new Recorder(input)
+      __log('Recorder initialised.')
+    }
+  }
+
   </script>
   <script src="recorder.js"></script>
 
