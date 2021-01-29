@@ -32,23 +32,10 @@ const rtAudio = new RtAudio(RtAudioApi.MACOSX_CORE)
 const chunkStream = new Chunk(BUFFER_SIZE * 4)
 const passStream = new PassThrough()
 
-rtAudio.openStream(
-  {
-    deviceId: rtAudio.getDefaultOutputDevice(),
-    nChannels: 1,
-    firstChannel: 0
-  },
-  null,
-  RtAudioFormat.RTAUDIO_SINT16,
-  48000,
-  1024,
-  'MyStream',
-  null,
-  null,
-  (RtAudioStreamFlags.RTAUDIO_SCHEDULE_REALTIME)
-)
-
-rtAudio.outputVolume = 1
+chunkStream.pipe(passStream)  // 傳來後端的聲音訊號量到達 chunkSize 後，會丟到 passStream（將聲音訊號量統一，這樣 rtAudio 就可以安心分析）
+passStream.on('data', data => {  // passStream 就只負責把資料再丟入 rtAudio
+  rtAudio.write(data)
+})
 
 function Broadcast () {
   this.status = 'idle'
@@ -70,47 +57,57 @@ Broadcast.prototype.start = function (obj) {
   this.status = 'busy'
   this.clientIp = obj.address
   this.area = obj.area
+  _openRtAudio()
 
   if (obj.type === 'ws') {
     this.sck = new WebSocket.Server({ port: 8000 })
     this.sck.on('connection', (socket, req) => {
-      console.log(req.socket.remoteAddress);  // 獲得使用者 ip
       rtAudio.start()
-      // 3. 接收資料前再次確認 ip
       socket.on('message', data => {
-        // console.log(Object.keys(data).length);
-        chunkStream.write(data)
+        // if (req.socket.remoteAddress === this.clientIp)
+          chunkStream.write(data)
       })
     })
   } else if (obj.type === 'udp'){
-    this.sck = dgram.createSocket('udp4')
-    this.sck.bind(8000)
+    this.sck = dgram.createSocket('udp4').bind(8000)
     rtAudio.start()
-    this.sck.on('listening', () => {
-      this.sck.on('message', data => {
-        // console.log(Object.keys(data).length);
+    this.sck.on('message', (data, req) => {
+      // if (`${req.address}:${req.port}` === this.clientIp)
         chunkStream.write(data)
-      })
     })
   }
 }
 
 Broadcast.prototype.stop = function () {
-  rtAudio.stop()
+  rtAudio.closeStream()
   this.status = 'idle'
-  this.clientIp = ''  // 正在廣播的address
-  this.area = []  // 廣播的分區編號
+  this.clientIp = ''
+  this.area = []
 
   this.sck.close()
   this.sck = null
   console.log('停止錄音')
 }
 
-chunkStream.pipe(passStream)  // 傳來後端的聲音訊號量到達 chunkSize 後，會丟到 passStream（將聲音訊號量統一，這樣 rtAudio 就可以安心分析）
-passStream.on('data', data => {  // passStream 就只負責把資料再丟入 rtAudio
-  rtAudio.write(data)
-})
-
+function _openRtAudio () {
+  rtAudio.openStream(
+    {
+      deviceId: rtAudio.getDefaultOutputDevice(),  // 由 rtAudio.getDevices() 得到可用的 device
+      nChannels: 1,
+      firstChannel: 0
+    },
+    null,
+    RtAudioFormat.RTAUDIO_SINT16,
+    48000,
+    1024,
+    'MyStream',
+    null,
+    null,
+    (RtAudioStreamFlags.RTAUDIO_SCHEDULE_REALTIME)
+  )
+  
+  rtAudio.outputVolume = 1
+}
 
 util.inherits(Broadcast, EventEmitter)
 module.exports = new Broadcast()
