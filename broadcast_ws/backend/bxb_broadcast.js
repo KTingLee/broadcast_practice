@@ -78,6 +78,7 @@ Broadcast.prototype.start = function (obj) {
       rtAudio.start()
       // 3. 接收資料前再次確認 ip
       socket.on('message', data => {
+        console.log(Object.keys(data).length);
         chunkStream.write(data)
       })
     })
@@ -87,6 +88,7 @@ Broadcast.prototype.start = function (obj) {
     rtAudio.start()
     this.sck.on('listening', () => {
       this.sck.on('message', data => {
+        console.log(Object.keys(data).length);
         chunkStream.write(data)
       })
     })
@@ -101,6 +103,7 @@ Broadcast.prototype.stop = function () {
 
   this.sck.close()
   this.sck = null
+  console.log('停止錄音')
 }
 
 chunkStream.pipe(passStream)

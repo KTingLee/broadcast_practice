@@ -18,6 +18,10 @@
   <p>Make sure you are using a recent version of Google Chrome, at the moment this only works with Google Chrome Canary.</p>
   <p>Also before you enable microphone input either plug in headphones or turn the volume down if you want to avoid ear splitting feedback!</p>
 
+  <p>
+    <input type="radio" value="ws" name="Type" checked>ws
+    <input type="radio" value="udp" name="Type" checked>udp
+  </p>
   <button id="broadcastInfo">廣播狀態</button>
   <button id="broadcastStart">開始廣播</button>
   <button id="broadcastStop">停止廣播</button>
@@ -39,23 +43,25 @@
 
     $("#broadcastStart").click(function(){
       $.post('http://127.0.0.1:3000/api/broadcast/start', {
-        type: 'ws',
+        type: $("input[name=Type]:checked").val() || 'ws',
         area: [],
         address: '192.168.0.1'
       }, function(data){
         if (data.message === 'OK') {
-          // 後端通知成功後，連上後端廣播用的 ws
-          broadcast_socket = new WebSocket('ws://localhost:8000');
-          broadcast_socket.binaryType = 'arraybuffer'
+          if ($("input[name=Type]:checked").val() === 'ws') {
+            // 後端通知成功後，連上後端廣播用的 ws
+            broadcast_socket = new WebSocket('ws://localhost:8000');
+            broadcast_socket.binaryType = 'arraybuffer'
 
-          // 連上後端廣播用的 ws 後，開始錄音，並送資料
-          broadcast_socket.onopen = function () {
-            console.log(broadcast_socket);
-            console.log('connect');
-            startRecording()
-            // setInterval(() => {
-            //   broadcast_socket.send('打招呼')  // broadcast 使用者送資料
-            // }, 1000)
+            // 連上後端廣播用的 ws 後，開始錄音，並送資料
+            broadcast_socket.onopen = function () {
+              console.log(broadcast_socket);
+              console.log('connect');
+              startRecording()
+              // setInterval(() => {
+              //   broadcast_socket.send('打招呼')  // broadcast 使用者送資料
+              // }, 1000)
+            }
           }
         } else {
           alert(data.message)
@@ -64,11 +70,11 @@
     });
 
     $("#broadcastStop").click(function(){
-      stopRecording()
       $.get(`http://127.0.0.1:3000/api/broadcast/stop`, () => {
         if (broadcast_socket) broadcast_socket.close()
         broadcast_socket = null
       })
+      stopRecording()
     })
 
   </script>
@@ -121,7 +127,7 @@
 
     window.onload = function init() {
       try {
-        // webkit shim
+        // webkit shim。把一些該用的工具準備好
         window.AudioContext = window.AudioContext || window.webkitAudioContext
         navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia
         window.URL = window.URL || window.webkitURL
