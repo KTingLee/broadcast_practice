@@ -78,7 +78,7 @@ Broadcast.prototype.start = function (obj) {
       rtAudio.start()
       // 3. 接收資料前再次確認 ip
       socket.on('message', data => {
-        console.log(Object.keys(data).length);
+        // console.log(Object.keys(data).length);
         chunkStream.write(data)
       })
     })
@@ -88,7 +88,7 @@ Broadcast.prototype.start = function (obj) {
     rtAudio.start()
     this.sck.on('listening', () => {
       this.sck.on('message', data => {
-        console.log(Object.keys(data).length);
+        // console.log(Object.keys(data).length);
         chunkStream.write(data)
       })
     })
@@ -106,8 +106,8 @@ Broadcast.prototype.stop = function () {
   console.log('停止錄音')
 }
 
-chunkStream.pipe(passStream)
-passStream.on('data', data => {
+chunkStream.pipe(passStream)  // 傳來後端的聲音訊號量到達 chunkSize 後，會丟到 passStream（將聲音訊號量統一，這樣 rtAudio 就可以安心分析）
+passStream.on('data', data => {  // passStream 就只負責把資料再丟入 rtAudio
   rtAudio.write(data)
 })
 
