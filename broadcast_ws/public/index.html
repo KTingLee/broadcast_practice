@@ -18,6 +18,7 @@
   <p>Make sure you are using a recent version of Google Chrome, at the moment this only works with Google Chrome Canary.</p>
   <p>Also before you enable microphone input either plug in headphones or turn the volume down if you want to avoid ear splitting feedback!</p>
 
+  <h3>即時廣播</h3>
   <p>
     <input type="radio" value="ws" name="Type" checked>ws
     <input type="radio" value="udp" name="Type" checked>udp
@@ -25,6 +26,14 @@
   <button id="broadcastInfo">廣播狀態</button>
   <button id="broadcastStart">開始廣播</button>
   <button id="broadcastStop">停止廣播</button>
+
+  <div>
+    <h3>廣播預錄</h3>
+    <button id="recordPreview">錄製</button>
+    <button id="recordFinish">結束</button>
+    <button id="recordSave">儲存</button>
+    <button id="recordInfo">錄製狀態</button>
+  </div>
 
   <h2>Recordings</h2>
   <ul id="recordingslist"></ul>
@@ -77,40 +86,18 @@
       stopRecording()
     })
 
-  </script>
+    $("#recordPreview").click(() => {
+      mediaRecorder.start()
+    })
 
-  <script>
-    function __log(e, data) {
-      log.innerHTML += "\n" + e + " " + (data || '')
-    }
-
-    var audio_context
-    var recorder
-    let mediaRecorder
-    let chunks = []
-
-    function startRecording() {
-      recorder && recorder.record()  // recorder 收聲音串流
-      __log('Recording...')
-
-      // mediaRecorder.start()
-    }
-
-    function stopRecording() {
-      recorder && recorder.stop()
-      __log('Stopped recording.')
-
-      // mediaRecorder.stop();
+    $("#recordFinish").click(() => {
+      mediaRecorder.stop()
 
       // create WAV download link using audio data blob
-      // createDownloadLink();
-      
-      recorder.clear()
-    }
+      mediaRecorder.addEventListener('dataavailable', createDownloadLink)
 
-    function createDownloadLink() {
-      recorder && recorder.exportWAV(function(blob) {
-        var url = URL.createObjectURL(blob);
+      function createDownloadLink(result) {
+        var url = URL.createObjectURL(result.data);
         var li = document.createElement('li');
         var au = document.createElement('audio');
         var hf = document.createElement('a');
@@ -122,7 +109,36 @@
         li.appendChild(au);
         li.appendChild(hf);
         recordingslist.appendChild(li);
-      });
+      }
+    })
+
+    $("#recordInfo").click(() => {
+      console.log(mediaRecorder.state);
+      console.log(mediaRecorder.mimeType);
+      console.log(mediaRecorder.stream);
+    })
+  
+  </script>
+
+  <script>
+    function __log(e, data) {
+      log.innerHTML += "\n" + e + " " + (data || '')
+    }
+
+    var audio_context
+    var recorder
+    var mediaRecorder
+    let chunks = []
+
+    function startRecording() {
+      recorder && recorder.record()  // recorder 收聲音串流
+      __log('Recording...')
+    }
+
+    function stopRecording() {
+      recorder && recorder.stop()
+      __log('Stopped recording.')      
+      recorder.clear()
     }
 
     window.onload = function init() {
@@ -149,7 +165,7 @@
         __log('Media stream created.')
 
         // 初始化 MediaRecorder 物件：用來分析聲音節點。初始化時可以提供初始化參數，例如 mimeType, sampleRate
-        // mediaRecorder = new MediaRecorder(stream)
+        mediaRecorder = new MediaRecorder(stream)
 
         // input.connect(audio_context.destination);  // 將 input 傳送到指定位置
         // __log('Input connected to audio context destination.')
