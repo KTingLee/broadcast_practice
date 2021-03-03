@@ -61,7 +61,7 @@ Broadcast.prototype.init = function () {
   }
 
   if (this.peer) {
-    this.peer.destroy()
+    this.peer.close()
     this.peerId = ''
   }
 }
@@ -93,17 +93,16 @@ Broadcast.prototype.start = async function (bcInfo) {
     this.peerId = await this.peer.id
     console.log(`wtrc peer 建立成功，peerId = ${this.peerId}`);
 
-    this.peer.on('connection', client => {
-      console.log('有人連到 peer 啦！');
+    this.peer.on('connect', client => {
+      console.log(client.peer.remoteAddress);
       rtAudio.start()
-      client.on('data', data => {
+      client.peer.on('data', data => {
         // if (req.socket.remoteAddress === this.clientIp)
           chunkStream.write(data)
       })
-      client.on('close', () => {
+      client.peer.on('close', () => {
         console.log(`peer斷線，將其摧毀`);
-        this.destroy()
-        console.log(this);
+        this.peer.close()
       })
     })
   }
@@ -117,7 +116,7 @@ Broadcast.prototype.stop = function () {
   this.init()
   console.log(`關閉後的 peer = ${this.peer}`);
 
-  server.close()
+  // server.close()
   console.log('停止錄音')
 }
 
