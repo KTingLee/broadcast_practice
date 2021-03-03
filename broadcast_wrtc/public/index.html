@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Live input record and playback</title>
+  <style type='text/css'>
+    ul { list-style: none; }
+    #recordingslist audio { display: block; margin-bottom: 10px; }
+  </style>
+  <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <!-- <script src="../dist/webrtc.bundle.js"></script> -->
+  <script src="../dist/index.bundle.js"></script>
+</head>
+<body>
+
+  <h1>Recorder.js simple WAV export example</h1>
+  <p>Make sure you are using a recent version of Google Chrome, at the moment this only works with Google Chrome Canary.</p>
+  <p>Also before you enable microphone input either plug in headphones or turn the volume down if you want to avoid ear splitting feedback!</p>
+
+  <h3>即時廣播</h3>
+  <p>
+    <input type="radio" value="ws" name="Type" checked>ws
+    <input type="radio" value="udp" name="Type" checked>udp
+  </p>
+  <button id="broadcastInfo">廣播狀態</button>
+  <button id="broadcastStart">開始廣播</button>
+  <button id="broadcastStop">停止廣播</button>
+
+  <h2>Recordings</h2>
+  <ul id="recordingslist"></ul>
+
+  <h2>Log</h2>
+  <pre id="log"></pre>
+
+  <script>
+    var audio_context
+    var webrtc
+
+    function __log(e, data) {
+      log.innerHTML += "\n" + e + " " + (data || '')
+    }
+
+    async function startRecording() {
+      webrtc.record()
+      __log('Recording...')
+    }
+
+    function stopRecording() {
+      __log('Stopped recording.')
+      webrtc.stop()
+    }
+
+    $('#broadcastInfo').click(() => {
+      $.get('http://127.0.0.1:3000/api/broadcast/info', res => {
+        log.innerHTML += "\n" + `Status: ${res.status},    Area: ${JSON.stringify(res.area)}`;
+      })
+    })
+
+    $("#broadcastStart").click(function(){
+      $.post('http://127.0.0.1:3000/api/broadcast/start', {
+        type: $("input[name=Type]:checked").val() || 'ws',
+        area: [],
+        sampleRate: 48000,
+        user: {
+          id: 1,
+          ip: '192.168.0.1'
+        }
+      }, async function(data){
+        if (data.message === 'OK') {
+          if ($("input[name=Type]:checked").val() === 'ws') {
+            // 後端通知成功後，連上後端廣播用的 ws
+            const serverPeerId = data.peerId
+            console.log('remote server:');
+            console.log(serverPeerId);
+            await webrtc.connect(serverPeerId)
+            startRecording()
+          }
+        } else {
+          alert(data.message)
+        }
+      });
+    });
+
+    $("#broadcastStop").click(function(){
+      $.get(`http://127.0.0.1:3000/api/broadcast/stop`, () => {
+        if (broadcast_socket) broadcast_socket.close()
+        broadcast_socket = null
+      })
+      stopRecording()
+    })
+  </script>
+
+  <script src="socket_io.js"></script>
+</body>
+</html>
