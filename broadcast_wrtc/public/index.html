@@ -70,6 +70,7 @@
       }, async function(data){
         if (data.message === 'OK') {
           if ($("input[name=Type]:checked").val() === 'ws') {
+            __log(`收到後端的peer資訊了`)
             // 後端通知成功後，連上後端廣播用的 ws
             const serverPeerId = data.peerId
             console.log('remote server:');

@@ -30,15 +30,21 @@ async function start (req, res, next) {
     })
     return res.status(httpStatus.OK).json({message: 'OK', peerId: BroadcastService.peerId})
   } catch (e) {
+    console.log('start出錯');
     next(e)
   }
 }
 
 function stop (req, res, next) {
-  if (BroadcastService.status === 'busy') {
-    BroadcastService.stop()
+  try {
+    if (BroadcastService.status === 'busy') {
+      BroadcastService.stop()
+    }
+    return res.status(httpStatus.OK).json({message: 'OK'})
+  } catch (e) {
+    console.log('stop出錯');
+    next(e)
   }
-  return res.status(httpStatus.OK).json({message: 'OK'})
 }
 
 module.exports = { info, start, stop}

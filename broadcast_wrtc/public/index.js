@@ -1,5 +1,4 @@
 const WebRTC = require('./webrtc')
-var $ = require( "jquery" )
 
 function __log(e, data) {
   const log = document.getElementById('log')
@@ -7,7 +6,6 @@ function __log(e, data) {
 }
 
 window.onload = function init() {
-  console.log('11123132132');
   try {
     // webkit shim。把一些該用的工具準備好
     window.AudioContext = window.AudioContext || window.webkitAudioContext

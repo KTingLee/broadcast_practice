@@ -62,6 +62,7 @@ Broadcast.prototype.init = function () {
 
   if (this.peer) {
     this.peer.close()
+    this.peer = null
     this.peerId = ''
   }
 }
@@ -91,7 +92,6 @@ Broadcast.prototype.start = async function (bcInfo) {
   if (bcInfo.type === 'ws') {
     this.peer = new SimplePeerJs({wrtc, fetch, WebSocket})
     this.peerId = await this.peer.id
-    console.log(`wtrc peer 建立成功，peerId = ${this.peerId}`);
 
     this.peer.on('connect', client => {
       console.log(client.peer.remoteAddress);
@@ -102,7 +102,7 @@ Broadcast.prototype.start = async function (bcInfo) {
       })
       client.peer.on('close', () => {
         console.log(`peer斷線，將其摧毀`);
-        this.peer.close()
+        this.init()
       })
     })
   }
@@ -111,10 +111,11 @@ Broadcast.prototype.start = async function (bcInfo) {
 Broadcast.prototype.stop = function () {
   if (this.status === 'idle') return
 
+  console.log(`rtAudio stream is open? `, rtAudio.isStreamOpen());
+  console.log(`rtAudio stream is running? `, rtAudio.isStreamRunning());
   rtAudio.closeStream()
-  console.log(`關閉時的 peer = ${this.peer}`);
+  console.log(`After close, rtAudio stream is running? `, rtAudio.isStreamRunning());
   this.init()
-  console.log(`關閉後的 peer = ${this.peer}`);
 
   // server.close()
   console.log('停止錄音')
